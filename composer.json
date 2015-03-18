@@ -1,0 +1,36 @@
+{
+  "name": "ashleydawson/doctrine-virtual-columns",
+  "type": "library",
+  "description": "Resolve data expressions or services and cache the results as virtual columns on entities",
+  "keywords": [
+    "behaviors",
+    "doctrine2",
+    "extensions",
+    "ashleydawson",
+    "virtual",
+    "column",
+    "cache",
+    "meta"
+  ],
+  "authors": [
+    {
+      "name": "Ashley Dawson",
+      "email": "ashley@ashleydawson.co.uk"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.3",
+    "doctrine/common": "~2.4"
+  },
+  "require-dev": {
+    "doctrine/orm": "~2.4",
+    "symfony/yaml": "~2.3",
+    "phpunit/phpunit": "~4.4"
+  },
+  "autoload": {
+    "psr-0": { "AshleyDawson\\": "lib/" }
+  },
+  "config": {
+    "bin-dir": "bin"
+  }
+}
