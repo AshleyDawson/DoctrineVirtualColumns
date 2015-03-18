@@ -1,15 +1,11 @@
 language: php
 
 php:
-  - 5.4
-  - 5.5
   - 5.6
+  - 5.5
+  - 5.4
 
-install:
-  - composer install
-
-script: phpunit -c .
-
-notifications:
-  email:
-    - ashley@ashleydawson.co.uk
+script:
+  - composer self-update
+  - composer install --no-dev
+  - phpunit --coverage-text
