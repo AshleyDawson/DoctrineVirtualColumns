@@ -56,8 +56,8 @@ class Post
     /**
      * @var float
      *
-     * @VirtualColumn\Service(
-     *     service="AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service\BayesianAverage",
+     * @VirtualColumn\Provider(
+     *     provider="AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service\BayesianAverage",
      *     type="float",
      *     isResultCached=true
      * )

@@ -304,15 +304,15 @@ class VirtualColumnEventListener implements EventSubscriber
                 }
             }
 
-            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Service $serviceAnnotation */
+            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider $serviceAnnotation */
             $serviceAnnotation = $this->annotationReader->getPropertyAnnotation(
                 $reflectionProperty,
-                'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Service'
+                'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider'
             );
 
             if ($serviceAnnotation) {
 
-                if ($serviceAnnotation->service) {
+                if ($serviceAnnotation->provider) {
 
                     $value = null;
 
@@ -321,7 +321,7 @@ class VirtualColumnEventListener implements EventSubscriber
                     }
                     else {
 
-                        $service = $serviceAnnotation->service;
+                        $service = $serviceAnnotation->provider;
 
                         if (is_string($service) && class_exists($service)) {
                             $service = new $service();

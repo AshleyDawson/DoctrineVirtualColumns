@@ -5,17 +5,17 @@ namespace AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn;
 use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\AbstractVirtualColumn;
 
 /**
- * Class Service
+ * Class Provider
  *
  * @package AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn
  *
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Service extends AbstractVirtualColumn
+class Provider extends AbstractVirtualColumn
 {
     /**
      * @var string | object
      */
-    public $service;
+    public $provider;
 }
