@@ -21,7 +21,7 @@ interface ServiceInterface
     /**
      * Set the subject entity
      *
-     * @return object
+     * @param object $entity
      */
     public function setEntity($entity);
 

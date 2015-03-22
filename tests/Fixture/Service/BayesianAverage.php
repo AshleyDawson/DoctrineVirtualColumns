@@ -16,6 +16,8 @@ class BayesianAverage extends AbstractService
      */
     public function getResultantValue()
     {
+        $this->
+
         $query = $this
             ->entityManager
             ->createQuery('SELECT AVG(v.value) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote v JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r.post = :post')
