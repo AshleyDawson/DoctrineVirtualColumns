@@ -335,6 +335,7 @@ class VirtualColumnEventListener implements EventSubscriber
                             $value = $service->getVirtualColumnValue();
 
                             // todo: don't think this transformation is necessary as a service can be directly specified
+                            // todo: maybe it is a good idea to leave it on here to enforce type?
                             $value = Type::getType($serviceAnnotation->type)
                                 ->convertToPHPValue(
                                     $value,
