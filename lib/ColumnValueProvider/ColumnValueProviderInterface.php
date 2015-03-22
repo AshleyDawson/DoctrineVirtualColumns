@@ -31,5 +31,5 @@ interface ColumnValueProviderInterface
      *
      * @return mixed
      */
-    public function getResultantValue();
+    public function getVirtualColumnValue();
 }

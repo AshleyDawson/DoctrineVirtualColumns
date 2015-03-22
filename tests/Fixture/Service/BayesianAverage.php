@@ -14,7 +14,7 @@ class BayesianAverage extends AbstractColumnValueProvider
     /**
      * {@inheritdoc}
      */
-    public function getResultantValue()
+    public function getVirtualColumnValue()
     {
         $query = $this
             ->entityManager

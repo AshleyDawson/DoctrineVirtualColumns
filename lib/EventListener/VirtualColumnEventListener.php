@@ -332,7 +332,7 @@ class VirtualColumnEventListener implements EventSubscriber
                             $service->setEntityManager($entityManager);
                             $service->setEntity($entity);
 
-                            $value = $service->getResultantValue();
+                            $value = $service->getVirtualColumnValue();
 
                             // todo: don't think this transformation is necessary as a service can be directly specified
                             $value = Type::getType($serviceAnnotation->type)
