@@ -2,14 +2,14 @@
 
 namespace AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service;
 
-use AshleyDawson\DoctrineVirtualColumns\Service\AbstractService;
+use AshleyDawson\DoctrineVirtualColumns\ColumnValueProvider\AbstractColumnValueProvider;
 
 /**
  * Class BayesianAverage
  *
  * @package AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service
  */
-class BayesianAverage extends AbstractService
+class BayesianAverage extends AbstractColumnValueProvider
 {
     /**
      * {@inheritdoc}

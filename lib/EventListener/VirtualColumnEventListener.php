@@ -2,7 +2,7 @@
 
 namespace AshleyDawson\DoctrineVirtualColumns\EventListener;
 
-use AshleyDawson\DoctrineVirtualColumns\Service\ServiceInterface;
+use AshleyDawson\DoctrineVirtualColumns\ColumnValueProvider\ColumnValueProviderInterface;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManagerInterface;
@@ -327,7 +327,7 @@ class VirtualColumnEventListener implements EventSubscriber
                             $service = new $service();
                         }
 
-                        if (is_object($service) && $service instanceof ServiceInterface) {
+                        if (is_object($service) && $service instanceof ColumnValueProviderInterface) {
 
                             $service->setEntityManager($entityManager);
                             $service->setEntity($entity);

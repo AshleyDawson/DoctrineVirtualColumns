@@ -1,15 +1,15 @@
 <?php
 
-namespace AshleyDawson\DoctrineVirtualColumns\Service;
+namespace AshleyDawson\DoctrineVirtualColumns\ColumnValueProvider;
 
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Interface ServiceInterface
+ * Interface ColumnValueProviderInterface
  *
- * @package AshleyDawson\DoctrineVirtualColumns\Service
+ * @package AshleyDawson\DoctrineVirtualColumns\ColumnValueProvider
  */
-interface ServiceInterface
+interface ColumnValueProviderInterface
 {
     /**
      * Inject entity manager
