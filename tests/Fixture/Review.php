@@ -3,6 +3,8 @@
 namespace AshleyDawson\DoctrineVirtualColumns\Tests\Fixture;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation;
 
 /**
  * Class Review
@@ -33,8 +35,24 @@ class Review
      * @var Post
      *
      * @ORM\ManyToOne(targetEntity="Post", inversedBy="reviews")
+     * @CacheInvalidation\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "bayesianAverage"})
      */
     private $post;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Vote", mappedBy="review", cascade={"persist"})
+     */
+    private $votes;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->votes = new ArrayCollection();
+    }
 
     /**
      * Get id
@@ -88,5 +106,39 @@ class Review
     {
         $this->post = $post;
         return $this;
+    }
+
+    /**
+     * Add vote
+     *
+     * @param Vote $vote
+     * @return $this
+     */
+    public function addVote(Vote $vote)
+    {
+        $this->votes->add($vote);
+        return $this;
+    }
+
+    /**
+     * Remove vote
+     *
+     * @param Vote $vote
+     * @return $this
+     */
+    public function removeVote(Vote $vote)
+    {
+        $this->votes->remove($vote);
+        return $this;
+    }
+
+    /**
+     * Get votes
+     *
+     * @return Vote[]
+     */
+    public function getVote()
+    {
+        return $this->votes;
     }
 }

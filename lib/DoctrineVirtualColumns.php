@@ -7,7 +7,7 @@ namespace AshleyDawson\DoctrineVirtualColumns;
  *
  * @package AshleyDawson\DoctrineVirtualColumns
  */
-class DoctrineVirtualColumns
+final class DoctrineVirtualColumns
 {
 
 }

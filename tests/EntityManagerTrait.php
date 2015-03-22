@@ -2,6 +2,8 @@
 
 namespace AshleyDawson\DoctrineVirtualColumns\Tests;
 
+use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\EntityManager;
@@ -36,18 +38,24 @@ trait EntityManagerTrait
         if (null !== $this->em) {
             return $this->em;
         }
+
         $conn = array_merge(array(
             'driver' => 'pdo_sqlite',
-            'memory' => true,
+            'memory' => false,
+            'path' => TESTS_TEMP_DIR . '/db.sqlite',
         ), $conn);
+
         $config = is_null($config) ? $this->getAnnotatedConfig() : $config;
         $em = EntityManager::create($conn, $config, $evm ?: $this->getEventManager());
+
         $schema = array_map(function ($class) use ($em) {
             return $em->getClassMetadata($class);
         }, (array) $this->getUsedEntityFixtures());
+
         $schemaTool = new SchemaTool($em);
         $schemaTool->dropSchema($schema);
         $schemaTool->createSchema($schema);
+
         return $this->em = $em;
     }
 
@@ -62,60 +70,29 @@ trait EntityManagerTrait
         // handle the filters
         $configurationClass = 'Doctrine\ORM\Configuration';
         $refl = new \ReflectionClass($configurationClass);
+
         $methods = $refl->getMethods();
         $mockMethods = array();
+
         foreach ($methods as $method) {
             if (!in_array($method->name, ['addFilter', 'getFilterClassName', 'addCustomNumericFunction', 'getCustomNumericFunction'])) {
                 $mockMethods[] = $method->name;
             }
         }
-        $config = $this->getMock($configurationClass, $mockMethods);
-        $config
-            ->expects($this->once())
-            ->method('getProxyDir')
-            ->will($this->returnValue(TESTS_TEMP_DIR))
-        ;
-        $config
-            ->expects($this->once())
-            ->method('getProxyNamespace')
-            ->will($this->returnValue('Proxy'))
-        ;
-        $config
-            ->expects($this->once())
-            ->method('getAutoGenerateProxyClasses')
-            ->will($this->returnValue(true))
-        ;
-        $config
-            ->expects($this->once())
-            ->method('getClassMetadataFactoryName')
-            ->will($this->returnValue('Doctrine\\ORM\\Mapping\\ClassMetadataFactory'))
-        ;
-        $mappingDriver = $this->getMetadataDriverImplementation();
-        $config
-            ->expects($this->any())
-            ->method('getMetadataDriverImpl')
-            ->will($this->returnValue($mappingDriver))
-        ;
-        $config
-            ->expects($this->any())
-            ->method('getDefaultRepositoryClassName')
-            ->will($this->returnValue('Doctrine\\ORM\\EntityRepository'))
-        ;
-        $config
-            ->expects($this->any())
-            ->method('getQuoteStrategy')
-            ->will($this->returnValue(new DefaultQuoteStrategy))
-        ;
-        $config
-            ->expects($this->any())
-            ->method('getRepositoryFactory')
-            ->will($this->returnValue(new DefaultRepositoryFactory()))
-        ;
-        $config
-            ->expects($this->any())
-            ->method('getDefaultQueryHints')
-            ->will($this->returnValue([]))
-        ;
+
+        $config = new \Doctrine\ORM\Configuration();
+
+        $config->setProxyDir(TESTS_TEMP_DIR);
+        $config->setProxyNamespace('Proxy');
+        $config->setAutoGenerateProxyClasses(true);
+        $config->setClassMetadataFactoryName('Doctrine\\ORM\\Mapping\\ClassMetadataFactory');
+        $config->setMetadataDriverImpl($this->getMetadataDriverImplementation());
+        $config->setDefaultRepositoryClassName('Doctrine\\ORM\\EntityRepository');
+        $config->setQuoteStrategy(new DefaultQuoteStrategy());
+        $config->setRepositoryFactory(new DefaultRepositoryFactory());
+
+        $config->setResultCacheImpl(new FilesystemCache(TESTS_TEMP_DIR));
+
         return $config;
     }
 
