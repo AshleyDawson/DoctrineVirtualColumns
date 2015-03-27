@@ -46,6 +46,8 @@ trait EntityManagerTrait
         ), $conn);
 
         $config = is_null($config) ? $this->getAnnotatedConfig() : $config;
+
+        /** @var \Doctrine\ORM\EntityManager $em */
         $em = EntityManager::create($conn, $config, $evm ?: $this->getEventManager());
 
         $schema = array_map(function ($class) use ($em) {
@@ -55,6 +57,9 @@ trait EntityManagerTrait
         $schemaTool = new SchemaTool($em);
         $schemaTool->dropSchema($schema);
         $schemaTool->createSchema($schema);
+
+        // Load fixtures
+        $stmnt = $em->getConnection()->exec(file_get_contents(__DIR__ . '/Resource/fixture/data-fixtures.sql'));
 
         return $this->em = $em;
     }
@@ -82,7 +87,7 @@ trait EntityManagerTrait
 
         $config = new \Doctrine\ORM\Configuration();
 
-        $config->setProxyDir(TESTS_TEMP_DIR);
+        $config->setProxyDir(TESTS_TEMP_DIR . '/proxy');
         $config->setProxyNamespace('Proxy');
         $config->setAutoGenerateProxyClasses(true);
         $config->setClassMetadataFactoryName('Doctrine\\ORM\\Mapping\\ClassMetadataFactory');
@@ -91,7 +96,7 @@ trait EntityManagerTrait
         $config->setQuoteStrategy(new DefaultQuoteStrategy());
         $config->setRepositoryFactory(new DefaultRepositoryFactory());
 
-        $config->setResultCacheImpl(new FilesystemCache(TESTS_TEMP_DIR));
+        $config->setResultCacheImpl(new ArrayCache(TESTS_TEMP_DIR));
 
         return $config;
     }

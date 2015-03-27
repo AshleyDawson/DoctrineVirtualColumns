@@ -7,13 +7,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn;
 
 /**
- * Class Post
+ * Class AbstractPost
  *
  * @package AshleyDawson\DoctrineVirtualColumns\Tests\Fixture
  *
  * @ORM\Entity
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="discriminator", type="string")
+ * @ORM\DiscriminatorMap({"product_post"="ProductPost", "materia_post"="MateriaPost"})
  */
-class Post
+abstract class AbstractPost
 {
     /**
      * @var int
@@ -34,7 +37,7 @@ class Post
     /**
      * @var float
      *
-     * @VirtualColumn\DQL(
+     * VirtualColumn\DQL(
      *     dql="SELECT AVG(r.rating) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r.post = :this",
      *     type="float",
      *     isResultCached=true
@@ -45,7 +48,7 @@ class Post
     /**
      * @var float
      *
-     * @VirtualColumn\SQL(
+     * VirtualColumn\SQL(
      *     sql="SELECT COUNT(*) FROM Review r WHERE r.post_id = :this.id",
      *     type="integer",
      *     isResultCached=true
@@ -56,7 +59,7 @@ class Post
     /**
      * @var float
      *
-     * @VirtualColumn\Provider(
+     * VirtualColumn\Provider(
      *     provider="AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service\BayesianAverage",
      *     type="float",
      *     isResultCached=true

@@ -20,9 +20,15 @@ class EntityManagerSingleton
     protected function getUsedEntityFixtures()
     {
         return [
-            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Post',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\AbstractPost',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\ProductPost',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\MateriaPost',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\MateriaType',
             'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review',
             'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\User',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Department',
+            'AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Enemy',
         ];
     }
 

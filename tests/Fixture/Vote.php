@@ -11,7 +11,7 @@ use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation;
  * @package AshleyDawson\DoctrineVirtualColumns\Tests\Fixture
  *
  * @ORM\Entity
- * @CacheInvalidation\DQLNotifyOnChange(
+ * CacheInvalidation\DQLNotifyOnChange(
  *     dql="SELECT p FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Post p JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r = :this.review",
  *     properties={"averageRating", "reviewCount", "bayesianAverage"}
  * )

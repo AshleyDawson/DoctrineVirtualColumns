@@ -32,10 +32,11 @@ class Review
     private $rating;
 
     /**
-     * @var Post
+     * @var AbstractPost
      *
-     * @ORM\ManyToOne(targetEntity="Post", inversedBy="reviews")
-     * @CacheInvalidation\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "bayesianAverage"})
+     * @ORM\ManyToOne(targetEntity="AbstractPost", inversedBy="reviews")
+     *
+     * CacheInvalidation\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "bayesianAverage"})
      */
     private $post;
 
@@ -89,7 +90,7 @@ class Review
     /**
      * Get post
      *
-     * @return Post
+     * @return AbstractPost
      */
     public function getPost()
     {
@@ -99,10 +100,10 @@ class Review
     /**
      * Set post
      *
-     * @param Post $post
+     * @param AbstractPost $post
      * @return Review
      */
-    public function setPost(Post $post)
+    public function setPost(AbstractPost $post)
     {
         $this->post = $post;
         return $this;
@@ -137,7 +138,7 @@ class Review
      *
      * @return Vote[]
      */
-    public function getVote()
+    public function getVotes()
     {
         return $this->votes;
     }
