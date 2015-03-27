@@ -25,47 +25,48 @@ abstract class AbstractPost
      * @ORM\Id
      * @ORM\GeneratedValue
      */
-    private $id;
+    protected $id;
 
     /**
      * @var ArrayCollection
      *
      * @ORM\OneToMany(targetEntity="Review", mappedBy="post", cascade={"persist"})
      */
-    private $reviews;
+    protected $reviews;
 
     /**
      * @var float
      *
-     * VirtualColumn\DQL(
+     * @VirtualColumn\DQL(
      *     dql="SELECT AVG(r.rating) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r.post = :this",
      *     type="float",
      *     isResultCached=true
      * )
      */
-    private $averageRating;
+    protected $averageRating;
 
     /**
      * @var float
      *
-     * VirtualColumn\SQL(
+     * @VirtualColumn\SQL(
      *     sql="SELECT COUNT(*) FROM Review r WHERE r.post_id = :this.id",
      *     type="integer",
      *     isResultCached=true
      * )
      */
-    private $reviewCount;
+    protected $reviewCount;
 
     /**
      * @var float
      *
-     * VirtualColumn\Provider(
+     * @VirtualColumn\Provider(
      *     provider="AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service\BayesianAverage",
      *     type="float",
-     *     isResultCached=true
+     *     isResultCached=true,
+     *     cacheLifeTime=10
      * )
      */
-    private $bayesianAverage;
+    protected $bayesianAverage;
 
     /**
      * Constructor

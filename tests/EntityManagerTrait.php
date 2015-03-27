@@ -59,7 +59,7 @@ trait EntityManagerTrait
         $schemaTool->createSchema($schema);
 
         // Load fixtures
-        $stmnt = $em->getConnection()->exec(file_get_contents(__DIR__ . '/Resource/fixture/data-fixtures.sql'));
+        $em->getConnection()->exec(file_get_contents(__DIR__ . '/Resource/fixture/data-fixtures.sql'));
 
         return $this->em = $em;
     }

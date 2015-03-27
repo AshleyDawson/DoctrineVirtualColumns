@@ -18,4 +18,9 @@ abstract class AbstractVirtualColumn
      * @var bool
      */
     public $isResultCached = false;
+
+    /**
+     * @var int
+     */
+    public $cacheLifeTime = 0;
 }

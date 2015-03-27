@@ -16,12 +16,49 @@ class BayesianAverage extends AbstractColumnValueProvider
      */
     public function getVirtualColumnValue()
     {
+        // Sum of the votes
+
         $query = $this
             ->entityManager
-            ->createQuery('SELECT AVG(v.value) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote v JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r.post = :post')
+            ->createQuery('SELECT SUM(v.value) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote v JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r.post = :post')
             ->setParameter('post', $this->entity)
         ;
 
-        return $query->getSingleScalarResult();
+        $sumOfVotes = (int) $query->getSingleScalarResult();
+
+        // Average rating for this entity
+
+        $query = $this
+            ->entityManager
+            ->createQuery('SELECT AVG(r.rating) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r.post = :post')
+            ->setParameter('post', $this->entity)
+        ;
+
+        $averageRatingForThisEntity = (double) $query->getSingleScalarResult();
+
+        // Top list threshold
+
+        $topListThreshold = 3;
+
+        // Average overall vote
+
+        $query = $this
+            ->entityManager
+            ->createQuery('SELECT AVG(v.value) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote v')
+        ;
+
+        // fixme: should probably use result cache here for production
+        //$query->useResultCache(true, 500);
+
+        $overallAverageVote = (int) $query->getSingleScalarResult();
+
+        // Calculate Bayesian average (rank)
+
+        $bayesianAverage =
+            ($sumOfVotes / ($sumOfVotes + $topListThreshold)) * $averageRatingForThisEntity +
+            ($topListThreshold / ($sumOfVotes + $topListThreshold)) * $overallAverageVote
+        ;
+
+        return $bayesianAverage;
     }
 }

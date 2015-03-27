@@ -197,158 +197,167 @@ class VirtualColumnEventListener implements EventSubscriber
     {
         $resultCache = $entityManager->getConfiguration()->getResultCacheImpl();
 
-        $reflectionProperties = (new \ReflectionObject($entity))->getProperties();
+        $thisEntityClassName = get_class($entity);
 
-        /** @var \ReflectionProperty $reflectionProperty */
-        foreach ($reflectionProperties as $reflectionProperty) {
+        $lineage = class_parents($entity);
 
-            $entityIdentifiers = $entityManager->getUnitOfWork()->getEntityIdentifier($entity);
+        $lineage[$thisEntityClassName] = $thisEntityClassName;
 
-            $cacheKey = $this->buildCacheKey(get_class($entity), $entityIdentifiers, $reflectionProperty->getName());
+        foreach ($lineage as $class) {
 
-            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\DQL $dqlAnnotation */
-            $dqlAnnotation = $this->annotationReader->getPropertyAnnotation(
-                $reflectionProperty,
-                'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\DQL'
-            );
+            $reflectionProperties = (new \ReflectionClass($class))->getProperties();
 
-            if ($dqlAnnotation) {
+            /** @var \ReflectionProperty $reflectionProperty */
+            foreach ($reflectionProperties as $reflectionProperty) {
 
-                if ($dqlAnnotation->dql) {
+                $entityIdentifiers = $entityManager->getUnitOfWork()->getEntityIdentifier($entity);
 
-                    if ($resultCache->contains($cacheKey)) {
-                        $value = $resultCache->fetch($cacheKey);
-                    }
-                    else {
+                $cacheKey = $this->buildCacheKey(get_class($entity), $entityIdentifiers, $reflectionProperty->getName());
 
-                        $value = $entityManager
-                            ->createQuery($dqlAnnotation->dql)
-                            ->setParameter('this', $entity)
-                            ->getSingleScalarResult()
-                        ;
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\DQL $dqlAnnotation */
+                $dqlAnnotation = $this->annotationReader->getPropertyAnnotation(
+                    $reflectionProperty,
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\DQL'
+                );
 
-                        $value = Type::getType($dqlAnnotation->type)
-                            ->convertToPHPValue(
-                                $value,
-                                $entityManager->getConnection()->getDatabasePlatform()
-                            )
-                        ;
+                if ($dqlAnnotation) {
 
-                        $resultCache->save($cacheKey, $value);
-                    }
+                    if ($dqlAnnotation->dql) {
 
-                    $reflectionProperty->setAccessible(true);
-                    $reflectionProperty->setValue($entity, $value);
-                }
-            }
-
-            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\SQL $sqlAnnotation */
-            $sqlAnnotation = $this->annotationReader->getPropertyAnnotation(
-                $reflectionProperty,
-                'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\SQL'
-            );
-
-            if ($sqlAnnotation) {
-
-                if ($sqlAnnotation->sql) {
-
-                    if ($resultCache->contains($cacheKey)) {
-                        $value = $resultCache->fetch($cacheKey);
-                    }
-                    else {
-
-                        $parameters = [];
-
-                        preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $sqlAnnotation->sql, $matches);
-
-                        if (is_array($matches) && isset($matches[0])) {
-
-                            unset($matches[0]);
-
-                            $accessor = PropertyAccess::createPropertyAccessor();
-
-                            foreach ($matches as $key => $expression) {
-
-                                $paramName = sprintf(':exp_%d', $key);
-
-                                $sqlAnnotation->sql = str_replace($expression, $paramName, $sqlAnnotation->sql);
-
-                                $expression = str_replace(':this.', '', $expression);
-
-                                $parameters[$paramName] = $accessor->getValue($entity, $expression);
-                            }
+                        if ($resultCache->contains($cacheKey)) {
+                            $value = $resultCache->fetch($cacheKey);
                         }
+                        else {
 
-                        $statement = $entityManager->getConnection()->prepare($sqlAnnotation->sql);
+                            $value = $entityManager
+                                ->createQuery($dqlAnnotation->dql)
+                                ->setParameter('this', $entity)
+                                ->getSingleScalarResult()
+                            ;
 
-                        $statement->execute($parameters);
-
-                        if ($statement->rowCount() > 1) {
-                            throw new \Exception('Must only return row');
-                        }
-
-                        $value = $statement->fetchColumn(0);
-
-                        $value = Type::getType($sqlAnnotation->type)
-                            ->convertToPHPValue(
-                                $value,
-                                $entityManager->getConnection()->getDatabasePlatform()
-                            )
-                        ;
-
-                        $resultCache->save($cacheKey, $value);
-                    }
-
-                    $reflectionProperty->setAccessible(true);
-                    $reflectionProperty->setValue($entity, $value);
-                }
-            }
-
-            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider $serviceAnnotation */
-            $serviceAnnotation = $this->annotationReader->getPropertyAnnotation(
-                $reflectionProperty,
-                'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider'
-            );
-
-            if ($serviceAnnotation) {
-
-                if ($serviceAnnotation->provider) {
-
-                    $value = null;
-
-                    if ($resultCache->contains($cacheKey)) {
-                        $value = $resultCache->fetch($cacheKey);
-                    }
-                    else {
-
-                        $service = $serviceAnnotation->provider;
-
-                        if (is_string($service) && class_exists($service)) {
-                            $service = new $service();
-                        }
-
-                        if (is_object($service) && $service instanceof ColumnValueProviderInterface) {
-
-                            $service->setEntityManager($entityManager);
-                            $service->setEntity($entity);
-
-                            $value = $service->getVirtualColumnValue();
-
-                            // todo: don't think this transformation is necessary as a service can be directly specified
-                            // todo: maybe it is a good idea to leave it on here to enforce type?
-                            $value = Type::getType($serviceAnnotation->type)
+                            $value = Type::getType($dqlAnnotation->type)
                                 ->convertToPHPValue(
                                     $value,
                                     $entityManager->getConnection()->getDatabasePlatform()
                                 )
                             ;
 
-                            $resultCache->save($cacheKey, $value);
+                            $resultCache->save($cacheKey, $value, (int) $dqlAnnotation->cacheLifeTime);
                         }
-                    }
 
-                    $reflectionProperty->setAccessible(true);
-                    $reflectionProperty->setValue($entity, $value);
+                        $reflectionProperty->setAccessible(true);
+                        $reflectionProperty->setValue($entity, $value);
+                    }
+                }
+
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\SQL $sqlAnnotation */
+                $sqlAnnotation = $this->annotationReader->getPropertyAnnotation(
+                    $reflectionProperty,
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\SQL'
+                );
+
+                if ($sqlAnnotation) {
+
+                    if ($sqlAnnotation->sql) {
+
+                        if ($resultCache->contains($cacheKey)) {
+                            $value = $resultCache->fetch($cacheKey);
+                        }
+                        else {
+
+                            $parameters = [];
+
+                            preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $sqlAnnotation->sql, $matches);
+
+                            if (is_array($matches) && isset($matches[0])) {
+
+                                unset($matches[0]);
+
+                                $accessor = PropertyAccess::createPropertyAccessor();
+
+                                foreach ($matches as $key => $expression) {
+
+                                    $paramName = sprintf(':exp_%d', $key);
+
+                                    $sqlAnnotation->sql = str_replace($expression, $paramName, $sqlAnnotation->sql);
+
+                                    $expression = str_replace(':this.', '', $expression);
+
+                                    $parameters[$paramName] = $accessor->getValue($entity, $expression);
+                                }
+                            }
+
+                            $statement = $entityManager->getConnection()->prepare($sqlAnnotation->sql);
+
+                            $statement->execute($parameters);
+
+                            if ($statement->rowCount() > 1) {
+                                throw new \Exception('Must only return single row');
+                            }
+
+                            $value = $statement->fetchColumn(0);
+
+                            $value = Type::getType($sqlAnnotation->type)
+                                ->convertToPHPValue(
+                                    $value,
+                                    $entityManager->getConnection()->getDatabasePlatform()
+                                )
+                            ;
+
+                            $resultCache->save($cacheKey, $value, (int) $sqlAnnotation->cacheLifeTime);
+                        }
+
+                        $reflectionProperty->setAccessible(true);
+                        $reflectionProperty->setValue($entity, $value);
+                    }
+                }
+
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider $serviceAnnotation */
+                $serviceAnnotation = $this->annotationReader->getPropertyAnnotation(
+                    $reflectionProperty,
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider'
+                );
+
+                if ($serviceAnnotation) {
+
+                    if ($serviceAnnotation->provider) {
+
+                        $value = null;
+
+                        if ($resultCache->contains($cacheKey)) {
+                            $value = $resultCache->fetch($cacheKey);
+                        }
+                        else {
+
+                            $service = $serviceAnnotation->provider;
+
+                            if (is_string($service) && class_exists($service)) {
+                                $service = new $service();
+                            }
+
+                            if (is_object($service) && $service instanceof ColumnValueProviderInterface) {
+
+                                $service->setEntityManager($entityManager);
+                                $service->setEntity($entity);
+
+                                $value = $service->getVirtualColumnValue();
+
+                                // todo: don't think this transformation is necessary as a service can be directly specified
+                                // todo: maybe it is a good idea to leave it on here to enforce type?
+                                $value = Type::getType($serviceAnnotation->type)
+                                    ->convertToPHPValue(
+                                        $value,
+                                        $entityManager->getConnection()->getDatabasePlatform()
+                                    )
+                                ;
+
+                                $resultCache->save($cacheKey, $value, (int) $serviceAnnotation->cacheLifeTime);
+                            }
+                        }
+
+                        $reflectionProperty->setAccessible(true);
+                        $reflectionProperty->setValue($entity, $value);
+                    }
                 }
             }
         }
