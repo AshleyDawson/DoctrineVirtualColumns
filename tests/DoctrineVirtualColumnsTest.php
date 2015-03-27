@@ -16,7 +16,7 @@ class DoctrineVirtualColumnsTest extends \PHPUnit_Framework_TestCase
         /** @var \AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\MateriaPost $materiaPost */
         $materiaPost = $em->getRepository('AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\MateriaPost')->find(4);
 
-        echo get_class($materiaPost) . "\n";
-        echo $materiaPost->getName() . "\n";
+//        echo get_class($materiaPost) . "\n";
+//        echo $materiaPost->getName() . "\n";
     }
 }
