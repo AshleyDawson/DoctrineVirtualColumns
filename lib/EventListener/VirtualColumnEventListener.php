@@ -3,6 +3,7 @@
 namespace AshleyDawson\DoctrineVirtualColumns\EventListener;
 
 use AshleyDawson\DoctrineVirtualColumns\ColumnValueProvider\ColumnValueProviderInterface;
+use Doctrine\Common\Annotations\Reader as AnnotationReaderInterface;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManagerInterface;
@@ -11,6 +12,7 @@ use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
@@ -25,14 +27,17 @@ class VirtualColumnEventListener implements EventSubscriber
      */
     protected $annotationReader;
 
+    /**
+     * @var array
+     */
     private static $changedEntities = [];
 
     /**
      * Constructor
      *
-     * @param AnnotationReader $annotationReader
+     * @param AnnotationReaderInterface $annotationReader
      */
-    public function __construct(AnnotationReader $annotationReader)
+    public function __construct(AnnotationReaderInterface $annotationReader)
     {
         $this->annotationReader = $annotationReader;
     }
@@ -92,15 +97,18 @@ class VirtualColumnEventListener implements EventSubscriber
 
                         $paramName = sprintf(':exp_%d', $key);
 
-                        $dqlNotifyAnnotation->dql = str_replace($expression, $paramName, $dqlNotifyAnnotation->dql);
+                        $dql = str_replace($expression, $paramName, $dqlNotifyAnnotation->dql);
 
                         $expression = str_replace(':this.', '', $expression);
 
                         $parameters[$paramName] = $accessor->getValue($entity, $expression);
                     }
                 }
+                else {
+                    $dql = $dqlNotifyAnnotation->dql;
+                }
 
-                $targetEntities = $entityManager->createQuery($dqlNotifyAnnotation->dql)->setParameters($parameters)->getResult();
+                $targetEntities = $entityManager->createQuery($dql)->setParameters($parameters)->getResult();
 
                 foreach ($targetEntities as $targetEntity) {
 
@@ -111,7 +119,7 @@ class VirtualColumnEventListener implements EventSubscriber
                         $cacheKey = $this->buildCacheKey(get_class($targetEntity), $entityIdentifiers, $targetProperty);
 
                         if ($resultCache->contains($cacheKey)) {
-                            echo "HIT DQL! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
+                            //echo "HIT DQL! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
                             $resultCache->delete($cacheKey);
                         }
                     }
@@ -147,7 +155,7 @@ class VirtualColumnEventListener implements EventSubscriber
                         $cacheKey = $this->buildCacheKey(get_class($targetEntity), $entityIdentifiers, $targetProperty);
 
                         if ($resultCache->contains($cacheKey)) {
-                            echo "HIT ASSOC! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
+                            //echo "HIT ASSOC! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
                             $resultCache->delete($cacheKey);
                         }
                     }
@@ -224,7 +232,7 @@ class VirtualColumnEventListener implements EventSubscriber
 
                     if ($dqlAnnotation->dql) {
 
-                        if ($resultCache->contains($cacheKey)) {
+                        if ($resultCache->contains($cacheKey) && $dqlAnnotation->isResultCached) {
                             $value = $resultCache->fetch($cacheKey);
                         }
                         else {
@@ -260,7 +268,7 @@ class VirtualColumnEventListener implements EventSubscriber
 
                     if ($sqlAnnotation->sql) {
 
-                        if ($resultCache->contains($cacheKey)) {
+                        if ($resultCache->contains($cacheKey) && $sqlAnnotation->isResultCached) {
                             $value = $resultCache->fetch($cacheKey);
                         }
                         else {
@@ -279,15 +287,18 @@ class VirtualColumnEventListener implements EventSubscriber
 
                                     $paramName = sprintf(':exp_%d', $key);
 
-                                    $sqlAnnotation->sql = str_replace($expression, $paramName, $sqlAnnotation->sql);
+                                    $sql = str_replace($expression, $paramName, $sqlAnnotation->sql);
 
                                     $expression = str_replace(':this.', '', $expression);
 
                                     $parameters[$paramName] = $accessor->getValue($entity, $expression);
                                 }
                             }
+                            else {
+                                $sql = $sqlAnnotation->sql;
+                            }
 
-                            $statement = $entityManager->getConnection()->prepare($sqlAnnotation->sql);
+                            $statement = $entityManager->getConnection()->prepare($sql);
 
                             $statement->execute($parameters);
 

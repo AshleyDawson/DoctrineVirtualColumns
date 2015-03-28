@@ -36,7 +36,7 @@ class Review
      *
      * @ORM\ManyToOne(targetEntity="AbstractPost", inversedBy="reviews")
      *
-     * CacheInvalidation\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "bayesianAverage"})
+     * @CacheInvalidation\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "bayesianAverage"})
      */
     private $post;
 
