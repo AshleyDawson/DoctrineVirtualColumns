@@ -97,9 +97,14 @@ class VirtualColumnEventListener implements EventSubscriber
 
                         $dql = str_replace($expression, $paramName, $dqlNotifyAnnotation->dql);
 
-                        $expression = str_replace(':this.', '', $expression);
+                        $expression = str_replace([':this.', ':this'], '', $expression);
 
-                        $parameters[$paramName] = $accessor->getValue($entity, $expression);
+                        if ( ! empty($expression)) {
+                            $parameters[$paramName] = $accessor->getValue($entity, $expression);
+                        }
+                        else {
+                            $parameters[$paramName] = $entity;
+                        }
                     }
                 }
                 else {
@@ -237,9 +242,37 @@ class VirtualColumnEventListener implements EventSubscriber
                         }
                         else {
 
+                            $parameters = [];
+
+                            if (preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $dqlAnnotation->dql, $matches)) {
+
+                                unset($matches[0]);
+
+                                $accessor = PropertyAccess::createPropertyAccessor();
+
+                                foreach ($matches as $key => $expression) {
+
+                                    $paramName = sprintf(':exp_%d', $key);
+
+                                    $dql = str_replace($expression, $paramName, $dqlAnnotation->dql);
+
+                                    $expression = str_replace([':this.', ':this'], '', $expression);
+
+                                    if ( ! empty($expression)) {
+                                        $parameters[$paramName] = $accessor->getValue($entity, $expression);
+                                    }
+                                    else {
+                                        $parameters[$paramName] = $entity;
+                                    }
+                                }
+                            }
+                            else {
+                                $dql = $dqlAnnotation->dql;
+                            }
+
                             $value = $entityManager
-                                ->createQuery($dqlAnnotation->dql)
-                                ->setParameter('this', $entity)
+                                ->createQuery($dql)
+                                ->setParameters($parameters)
                                 ->getSingleScalarResult()
                             ;
 
@@ -287,9 +320,14 @@ class VirtualColumnEventListener implements EventSubscriber
 
                                     $sql = str_replace($expression, $paramName, $sqlAnnotation->sql);
 
-                                    $expression = str_replace(':this.', '', $expression);
+                                    $expression = str_replace([':this.', ':this'], '', $expression);
 
-                                    $parameters[$paramName] = $accessor->getValue($entity, $expression);
+                                    if ( ! empty($expression)) {
+                                        $parameters[$paramName] = $accessor->getValue($entity, $expression);
+                                    }
+                                    else {
+                                        $parameters[$paramName] = $entity;
+                                    }
                                 }
                             }
                             else {
@@ -340,11 +378,12 @@ class VirtualColumnEventListener implements EventSubscriber
 
                             $service = $serviceAnnotation->provider;
 
+                            // todo: if this service is injected then the instance will already exist
                             if (is_string($service) && class_exists($service)) {
                                 $service = new $service();
                             }
 
-                            if (is_object($service) && $service instanceof ColumnValueProviderInterface) {
+                            if ($service instanceof ColumnValueProviderInterface) {
 
                                 $service->setEntityManager($entityManager);
                                 $service->setEntity($entity);
