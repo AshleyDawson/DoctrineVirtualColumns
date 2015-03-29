@@ -2,6 +2,7 @@
 
 namespace AshleyDawson\DoctrineVirtualColumns\Tests;
 
+use Doctrine\Common\Cache\FilesystemCache;
 use Doctrine\ORM\Mapping\DefaultQuoteStrategy;
 use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use Doctrine\Common\Cache\ArrayCache;
@@ -70,7 +71,7 @@ abstract class AbstractDoctrineTestCase extends \PHPUnit_Framework_TestCase
         $config->setDefaultRepositoryClassName('Doctrine\ORM\EntityRepository');
         $config->setQuoteStrategy(new DefaultQuoteStrategy());
         $config->setRepositoryFactory(new DefaultRepositoryFactory());
-        $config->setResultCacheImpl(new ArrayCache(TESTS_TEMP_DIR));
+        $config->setResultCacheImpl(new FilesystemCache(TESTS_TEMP_DIR . '/result-cache'));
 
         return $config;
     }

@@ -3,19 +3,23 @@
 namespace AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation;
 
 /**
- * Class AbstractVirtualColumn
+ * Class SQL
  *
  * @package AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation
+ *
+ * @Annotation
+ * @Target({"PROPERTY"})
  */
-abstract class AbstractVirtualColumn
+class SQL extends AbstractVirtualColumn
 {
     /**
-     * @var bool
+     * @var string
      */
-    public $isResultCached = false;
+    public $sql;
 
     /**
-     * @var int
+     * @var string
      */
-    public $cacheLifeTime = 0;
+    public $type = 'string';
+
 }

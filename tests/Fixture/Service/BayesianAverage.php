@@ -59,6 +59,6 @@ class BayesianAverage extends AbstractColumnValueProvider
             ($topListThreshold / ($sumOfVotes + $topListThreshold)) * $overallAverageVote
         ;
 
-        return $bayesianAverage;
+        return (double) $bayesianAverage;
     }
 }

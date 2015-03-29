@@ -1,11 +1,11 @@
 <?php
 
-namespace AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation;
+namespace AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Cache;
 
 /**
  * Class AssociationNotifyOnChange
  *
- * @package AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation
+ * @package AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Cache
  *
  * @Annotation
  * @Target({"PROPERTY"})

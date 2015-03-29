@@ -4,7 +4,7 @@ namespace AshleyDawson\DoctrineVirtualColumns\Tests\Fixture;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
-use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn;
+use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation as VirtualColumn;
 
 /**
  * Class AbstractPost
@@ -46,7 +46,7 @@ abstract class AbstractPost
     protected $averageRating;
 
     /**
-     * @var float
+     * @var int
      *
      * @VirtualColumn\SQL(
      *     sql="SELECT COUNT(*) FROM Review r WHERE r.post_id = :this.id",
@@ -57,11 +57,21 @@ abstract class AbstractPost
     protected $reviewCount;
 
     /**
-     * @var float
+     * @var int
+     *
+     * @VirtualColumn\DQL(
+     *     dql="SELECT COUNT(v) FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote v JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WITH v.review = r WHERE r.post = :this",
+     *     type="integer",
+     *     isResultCached=true
+     * )
+     */
+    protected $voteCount;
+
+    /**
+     * @var double
      *
      * @VirtualColumn\Provider(
      *     provider="AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Service\BayesianAverage",
-     *     type="float",
      *     isResultCached=true,
      *     cacheLifeTime=10
      * )
@@ -148,5 +158,15 @@ abstract class AbstractPost
     public function getBayesianAverage()
     {
         return $this->bayesianAverage;
+    }
+
+    /**
+     * Get voteCount
+     *
+     * @return int
+     */
+    public function getVoteCount()
+    {
+        return $this->voteCount;
     }
 }

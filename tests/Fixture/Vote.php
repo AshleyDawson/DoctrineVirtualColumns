@@ -3,7 +3,7 @@
 namespace AshleyDawson\DoctrineVirtualColumns\Tests\Fixture;
 
 use Doctrine\ORM\Mapping as ORM;
-use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation;
+use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation as VirtualColumn;
 
 /**
  * Class Vote
@@ -11,9 +11,10 @@ use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation;
  * @package AshleyDawson\DoctrineVirtualColumns\Tests\Fixture
  *
  * @ORM\Entity
- * @CacheInvalidation\DQLNotifyOnChange(
- *     dql="SELECT p FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Post p JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WHERE r = :this.review",
- *     properties={"averageRating", "reviewCount", "bayesianAverage"}
+ *
+ * @VirtualColumn\Cache\DQLNotifyOnChange(
+ *     dql="SELECT p FROM AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\AbstractPost p JOIN AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review r WITH p = r.post WHERE r = :this.review",
+ *     properties={"averageRating", "reviewCount", "voteCount"}
  * )
  */
 class Vote

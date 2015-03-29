@@ -4,7 +4,7 @@ namespace AshleyDawson\DoctrineVirtualColumns\Tests\Fixture;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
-use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation;
+use AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation as VirtualColumn;
 
 /**
  * Class Review
@@ -36,7 +36,7 @@ class Review
      *
      * @ORM\ManyToOne(targetEntity="AbstractPost", inversedBy="reviews")
      *
-     * @CacheInvalidation\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "bayesianAverage"})
+     * @VirtualColumn\Cache\AssociationNotifyOnChange(properties={"averageRating", "reviewCount", "voteCount"})
      */
     private $post;
 

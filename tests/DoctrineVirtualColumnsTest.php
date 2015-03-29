@@ -4,6 +4,7 @@ namespace AshleyDawson\DoctrineVirtualColumns\Tests;
 
 use AshleyDawson\DoctrineVirtualColumns\EventListener\VirtualColumnEventListener;
 use AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review;
+use AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote;
 
 /**
  * Class DoctrineVirtualColumnsTest
@@ -29,9 +30,11 @@ class DoctrineVirtualColumnsTest extends AbstractDoctrineTestCase
         echo 'Average Rating: ' . $materiaPost->getAverageRating() . "\n";
         echo 'Review Count: ' . $materiaPost->getReviewCount() . "\n";
         echo 'Bayesian Average: ' . $materiaPost->getBayesianAverage() . "\n";
+        echo 'Vote Count: ' . $materiaPost->getVoteCount() . "\n";
 
         $materiaPost->addReview((new Review())->setPost($materiaPost)->setRating(5));
         $materiaPost->addReview((new Review())->setPost($materiaPost)->setRating(4.5));
+        $materiaPost->addReview((new Review())->setPost($materiaPost)->setRating(4));
 
         $this->getEntityManager()->persist($materiaPost);
 
@@ -42,7 +45,48 @@ class DoctrineVirtualColumnsTest extends AbstractDoctrineTestCase
         echo 'Average Rating: ' . $materiaPost->getAverageRating() . "\n";
         echo 'Review Count: ' . $materiaPost->getReviewCount() . "\n";
         echo 'Bayesian Average: ' . $materiaPost->getBayesianAverage() . "\n";
+        echo 'Vote Count: ' . $materiaPost->getVoteCount() . "\n";
 
+        $materiaPost->addReview((new Review())->setPost($materiaPost)->setRating(5));
+
+        $review = new Review();
+
+        $review->setPost($materiaPost)->setRating(4)->addVote((new Vote())->setValue(1)->setReview($review))->addVote((new Vote())->setValue(1)->setReview($review));
+
+        $materiaPost->addReview($review);
+        $materiaPost->addReview((new Review())->setPost($materiaPost)->setRating(2));
+
+        $this->getEntityManager()->persist($materiaPost);
+
+        $this->getEntityManager()->flush();
+
+        echo "------------\n";
+
+        echo 'Average Rating: ' . $materiaPost->getAverageRating() . "\n";
+        echo 'Review Count: ' . $materiaPost->getReviewCount() . "\n";
+        echo 'Bayesian Average: ' . $materiaPost->getBayesianAverage() . "\n";
+        echo 'Vote Count: ' . $materiaPost->getVoteCount() . "\n";
+
+        $vote = $this->getEntityManager()->getRepository('AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Vote')->find(54);
+
+        $vote->setValue(-1);
+
+        $this->getEntityManager()->persist($vote);
+
+        $this->getEntityManager()->flush();
+
+        $review = $this->getEntityManager()->getRepository('AshleyDawson\DoctrineVirtualColumns\Tests\Fixture\Review')->find(26);
+
+        $this->getEntityManager()->remove($review);
+
+        $this->getEntityManager()->flush();
+
+        echo "------------\n";
+
+        echo 'Average Rating: ' . $materiaPost->getAverageRating() . "\n";
+        echo 'Review Count: ' . $materiaPost->getReviewCount() . "\n";
+        echo 'Bayesian Average: ' . $materiaPost->getBayesianAverage() . "\n";
+        echo 'Vote Count: ' . $materiaPost->getVoteCount() . "\n";
     }
 
     /**

@@ -12,7 +12,6 @@ use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
@@ -62,7 +61,8 @@ class VirtualColumnEventListener implements EventSubscriber
 
         self::$changedEntities = array_merge(
             $entityManager->getUnitOfWork()->getScheduledEntityInsertions(),
-            $entityManager->getUnitOfWork()->getScheduledEntityUpdates()
+            $entityManager->getUnitOfWork()->getScheduledEntityUpdates(),
+            $entityManager->getUnitOfWork()->getScheduledEntityDeletions()
         );
     }
 
@@ -78,16 +78,14 @@ class VirtualColumnEventListener implements EventSubscriber
 
             $reflectionClass = new \ReflectionClass($entity);
 
-            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation\DQLNotifyOnChange $dqlNotifyAnnotation */
-            $dqlNotifyAnnotation = $this->annotationReader->getClassAnnotation($reflectionClass, 'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation\DQLNotifyOnChange');
+            /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Cache\DQLNotifyOnChange $dqlNotifyAnnotation */
+            $dqlNotifyAnnotation = $this->annotationReader->getClassAnnotation($reflectionClass, 'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Cache\DQLNotifyOnChange');
 
             if ($dqlNotifyAnnotation) {
 
                 $parameters = [];
 
-                preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $dqlNotifyAnnotation->dql, $matches);
-
-                if (is_array($matches) && isset($matches[0])) {
+                if (preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $dqlNotifyAnnotation->dql, $matches)) {
 
                     unset($matches[0]);
 
@@ -119,7 +117,8 @@ class VirtualColumnEventListener implements EventSubscriber
                         $cacheKey = $this->buildCacheKey(get_class($targetEntity), $entityIdentifiers, $targetProperty);
 
                         if ($resultCache->contains($cacheKey)) {
-                            //echo "HIT DQL! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
+                            // todo: should probably raise an event so that cache transitions can be logged
+                            echo "HIT DQL! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
                             $resultCache->delete($cacheKey);
                         }
                     }
@@ -138,10 +137,10 @@ class VirtualColumnEventListener implements EventSubscriber
 
             foreach ($reflectionProperties as $reflectionProperty) {
 
-                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation\AssociationNotifyOnChange $notifyOnChangeAnnotation */
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Cache\AssociationNotifyOnChange $notifyOnChangeAnnotation */
                 $notifyOnChangeAnnotation = $this->annotationReader->getPropertyAnnotation(
                     $reflectionProperty,
-                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\CacheInvalidation\AssociationNotifyOnChange'
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Cache\AssociationNotifyOnChange'
                 );
 
                 if ($notifyOnChangeAnnotation) {
@@ -155,7 +154,8 @@ class VirtualColumnEventListener implements EventSubscriber
                         $cacheKey = $this->buildCacheKey(get_class($targetEntity), $entityIdentifiers, $targetProperty);
 
                         if ($resultCache->contains($cacheKey)) {
-                            //echo "HIT ASSOC! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
+                            // todo: should probably raise an event so that cache transitions can be logged
+                            echo "HIT ASSOC! - ", $cacheKey, " - ", get_class($targetEntity), " - ", implode(',', $entityIdentifiers), " - ", $targetProperty, "\n";
                             $resultCache->delete($cacheKey);
                         }
                     }
@@ -222,10 +222,10 @@ class VirtualColumnEventListener implements EventSubscriber
 
                 $cacheKey = $this->buildCacheKey(get_class($entity), $entityIdentifiers, $reflectionProperty->getName());
 
-                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\DQL $dqlAnnotation */
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\DQL $dqlAnnotation */
                 $dqlAnnotation = $this->annotationReader->getPropertyAnnotation(
                     $reflectionProperty,
-                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\DQL'
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\DQL'
                 );
 
                 if ($dqlAnnotation) {
@@ -258,10 +258,10 @@ class VirtualColumnEventListener implements EventSubscriber
                     }
                 }
 
-                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\SQL $sqlAnnotation */
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\SQL $sqlAnnotation */
                 $sqlAnnotation = $this->annotationReader->getPropertyAnnotation(
                     $reflectionProperty,
-                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\SQL'
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\SQL'
                 );
 
                 if ($sqlAnnotation) {
@@ -275,9 +275,7 @@ class VirtualColumnEventListener implements EventSubscriber
 
                             $parameters = [];
 
-                            preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $sqlAnnotation->sql, $matches);
-
-                            if (is_array($matches) && isset($matches[0])) {
+                            if (preg_match('/.*(\:[a-z0-9\.\[\]_]+).*/i', $sqlAnnotation->sql, $matches)) {
 
                                 unset($matches[0]);
 
@@ -323,10 +321,10 @@ class VirtualColumnEventListener implements EventSubscriber
                     }
                 }
 
-                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider $serviceAnnotation */
+                /** @var \AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Provider $serviceAnnotation */
                 $serviceAnnotation = $this->annotationReader->getPropertyAnnotation(
                     $reflectionProperty,
-                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\VirtualColumn\Provider'
+                    'AshleyDawson\DoctrineVirtualColumns\Mapping\Annotation\Provider'
                 );
 
                 if ($serviceAnnotation) {
@@ -352,15 +350,6 @@ class VirtualColumnEventListener implements EventSubscriber
                                 $service->setEntity($entity);
 
                                 $value = $service->getVirtualColumnValue();
-
-                                // todo: don't think this transformation is necessary as a service can be directly specified
-                                // todo: maybe it is a good idea to leave it on here to enforce type?
-                                $value = Type::getType($serviceAnnotation->type)
-                                    ->convertToPHPValue(
-                                        $value,
-                                        $entityManager->getConnection()->getDatabasePlatform()
-                                    )
-                                ;
 
                                 $resultCache->save($cacheKey, $value, (int) $serviceAnnotation->cacheLifeTime);
                             }
